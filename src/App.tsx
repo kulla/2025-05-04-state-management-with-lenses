@@ -1,12 +1,37 @@
 import '@picocss/pico/css/pico.min.css'
 import './App.css'
+import { useState } from 'react'
+
+const exampleExercise: MultipleChoiceExercise = {
+  type: 'multiple-choice-exercise',
+  title: 'Which of the following are programming languages?',
+  solutions: [
+    { answer: 'JavaScript', correct: true },
+    { answer: 'HTML', correct: false },
+    { answer: 'Python', correct: true },
+    { answer: 'CSS', correct: false },
+  ],
+}
 
 export default function App() {
+  return <main className="content">{renderExercise(exampleExercise)}</main>
+}
+
+function renderExercise(exercise: MultipleChoiceExercise) {
   return (
-    <main className="content">
-      <h1>Rsbuild with React</h1>
-      <p>Start building amazing things with Rsbuild.</p>
-    </main>
+    <section>
+      <h2>{exercise.title}</h2>
+      <ul>
+        {exercise.solutions.map((solution) => (
+          <li key={solution.answer}>
+            <label>
+              <input type="checkbox" />
+              {solution.answer}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
