@@ -13,32 +13,53 @@ const exampleExercise: MultipleChoiceExercise = {
   ],
 }
 
+function text(value: string): Text {
+  return { type: 'text', value }
+}
+
 export default function App() {
   const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
 
   return <main className="content">{render(state)}</main>
 }
 
-function render(exercise: MultipleChoiceExercise) {
+function render(entity: Entity) {
+  switch (entity.type) {
+    case 'multiple-choice-exercise':
+      return renderMultipleChoiceExercise(entity)
+    case 'solution':
+      return renderSolution(entity)
+    case 'text':
+      return renderText(entity)
+    default:
+      return null
+  }
+}
+
+function renderMultipleChoiceExercise(exercise: MultipleChoiceExercise) {
   return (
     <section>
-      <h2>{exercise.title.value}</h2>
+      <h2>{render(exercise.title)}</h2>
       <ul>
         {exercise.solutions.map((solution) => (
-          <li key={solution.answer.value}>
-            <label>
-              <input type="checkbox" />
-              {solution.answer.value}
-            </label>
-          </li>
+          <li key={solution.answer.value}>{render(solution)}</li>
         ))}
       </ul>
     </section>
   )
 }
 
-function text(value: string): Text {
-  return { type: 'text', value }
+function renderSolution(solution: Solution) {
+  return (
+    <label>
+      <input type="checkbox" />
+      {render(solution.answer)}
+    </label>
+  )
+}
+
+function renderText(text: Text) {
+  return <span>{text.value}</span>
 }
 
 interface Text {
