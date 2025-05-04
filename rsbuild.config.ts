@@ -6,7 +6,7 @@ export default defineConfig({
     title: 'Prototype',
   },
   output: {
-    assetPrefix: '/rsbuild-react-bun-biome-starter-template/',
+    assetPrefix: '/2025-05-04-state-management-with-lenses/',
   },
   plugins: [pluginReact()],
 })
