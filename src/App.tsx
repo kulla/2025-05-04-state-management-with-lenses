@@ -1,7 +1,7 @@
 import '@picocss/pico/css/pico.min.css'
 import './App.css'
 
-const App = () => {
+export default function App() {
   return (
     <main className="content">
       <h1>Rsbuild with React</h1>
@@ -9,5 +9,3 @@ const App = () => {
     </main>
   )
 }
-
-export default App
