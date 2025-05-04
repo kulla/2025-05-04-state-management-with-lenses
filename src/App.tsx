@@ -54,6 +54,8 @@ export default function App() {
 
   return (
     <main className="content">
+      <h1>Editable Multiple Choice Exercise</h1>
+      <hr />
       <div contentEditable suppressContentEditableWarning spellCheck={false}>
         {render({ value: state, path: [] })}
       </div>
@@ -107,23 +109,21 @@ function renderMultipleChoiceExercise(
   const solutions = get(stateValue, 'solutions')
 
   return (
-    <section>
-      <h2>{render(get(stateValue, 'title'))}</h2>
-      <ul>
-        {map(solutions, (solution) => (
-          <li key={solution.value.answer.value}>{render(solution)}</li>
-        ))}
-      </ul>
+    <section {...dataTypes(stateValue)}>
+      <p>
+        <b>Exercise:</b> {render(get(stateValue, 'title'))}
+      </p>
+      <ul>{map(solutions, render)}</ul>
     </section>
   )
 }
 
 function renderSolution(state: StateValue<Solution>) {
   return (
-    <label {...dataTypes(state)}>
+    <li key={state.value.answer.value} {...dataTypes(state)}>
       <input type="checkbox" />
       {render(get(state, 'answer'))}
-    </label>
+    </li>
   )
 }
 
