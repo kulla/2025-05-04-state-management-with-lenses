@@ -127,7 +127,7 @@ export default function App() {
           if (event.key.length > 1) event.preventDefault()
         }}
       >
-        {render({ value: state, path: [] })}
+        {render({ value: state, path: [], setState })}
       </div>
       <hr />
       <h2>State</h2>
@@ -165,12 +165,12 @@ function isElement(node: Node): node is Element {
   return node.nodeType === Node.ELEMENT_NODE
 }
 
-function render({ value, path }: StateValue<Entity>) {
+function render({ value, path, setState }: StateValue<Entity>) {
   switch (value.type) {
     case 'multiple-choice-exercise':
-      return renderMultipleChoiceExercise({ value, path })
+      return renderMultipleChoiceExercise({ value, path, setState })
     case 'text':
-      return renderText({ value, path })
+      return renderText({ value, path, setState })
     default:
       return null
   }
@@ -219,24 +219,25 @@ function isEntity(value: unknown): value is Entity {
 }
 
 function map<E, R>(
-  { value, path }: StateValue<Array<E>>,
+  { value, path, setState }: StateValue<Array<E>>,
   callback: (value: StateValue<E>) => R,
 ): Array<R> {
   return value.map((item, index) =>
-    callback({ value: item, path: [...path, index] }),
+    callback({ value: item, path: [...path, index], setState }),
   )
 }
 
 function get<T, K extends keyof T & (string | number)>(
-  { value, path }: StateValue<T>,
+  { value, path, setState }: StateValue<T>,
   key: K,
 ): StateValue<T[K]> {
-  return { value: value[key], path: [...path, key] }
+  return { value: value[key], path: [...path, key], setState }
 }
 
 interface StateValue<A> {
   value: A
   path: Path
+  setState: React.Dispatch<React.SetStateAction<MultipleChoiceExercise>>
 }
 
 interface Position {
