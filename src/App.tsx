@@ -4,12 +4,12 @@ import { useState } from 'react'
 
 const exampleExercise: MultipleChoiceExercise = {
   type: 'multiple-choice-exercise',
-  title: 'Which of the following are programming languages?',
+  title: text('Which of the following are programming languages?'),
   solutions: [
-    { answer: 'JavaScript', correct: true },
-    { answer: 'HTML', correct: false },
-    { answer: 'Python', correct: true },
-    { answer: 'CSS', correct: false },
+    { type: 'solution', answer: text('JavaScript'), correct: true },
+    { type: 'solution', answer: text('HTML'), correct: false },
+    { type: 'solution', answer: text('Python'), correct: true },
+    { type: 'solution', answer: text('CSS'), correct: false },
   ],
 }
 
@@ -22,13 +22,13 @@ export default function App() {
 function render(exercise: MultipleChoiceExercise) {
   return (
     <section>
-      <h2>{exercise.title}</h2>
+      <h2>{exercise.title.value}</h2>
       <ul>
         {exercise.solutions.map((solution) => (
-          <li key={solution.answer}>
+          <li key={solution.answer.value}>
             <label>
               <input type="checkbox" />
-              {solution.answer}
+              {solution.answer.value}
             </label>
           </li>
         ))}
@@ -37,13 +37,25 @@ function render(exercise: MultipleChoiceExercise) {
   )
 }
 
-interface MultipleChoiceExercise {
-  type: 'multiple-choice-exercise'
-  title: string
-  solutions: Solution[]
+function text(value: string): Text {
+  return { type: 'text', value }
+}
+
+interface Text {
+  type: 'text'
+  value: string
 }
 
 interface Solution {
-  answer: string
+  type: 'solution'
+  answer: Text
   correct: boolean
 }
+
+interface MultipleChoiceExercise {
+  type: 'multiple-choice-exercise'
+  title: Text
+  solutions: Solution[]
+}
+
+type Entity = MultipleChoiceExercise | Solution | Text
