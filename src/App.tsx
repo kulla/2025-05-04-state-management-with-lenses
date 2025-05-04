@@ -7,10 +7,10 @@ const exampleExercise: MultipleChoiceExercise = {
   type: 'multiple-choice-exercise',
   title: text('Which of the following are programming languages?'),
   solutions: [
-    { type: 'solution', answer: text('JavaScript'), correct: true },
-    { type: 'solution', answer: text('HTML'), correct: false },
-    { type: 'solution', answer: text('Python'), correct: true },
-    { type: 'solution', answer: text('CSS'), correct: false },
+    { answer: text('JavaScript'), correct: true },
+    { answer: text('HTML'), correct: false },
+    { answer: text('Python'), correct: true },
+    { answer: text('CSS'), correct: false },
   ],
 }
 
@@ -169,8 +169,6 @@ function render({ value, path }: StateValue<Entity>) {
   switch (value.type) {
     case 'multiple-choice-exercise':
       return renderMultipleChoiceExercise({ value, path })
-    case 'solution':
-      return renderSolution({ value, path })
     case 'text':
       return renderText({ value, path })
     default:
@@ -188,17 +186,15 @@ function renderMultipleChoiceExercise(
       <p>
         <b>Exercise:</b> {render(get(stateValue, 'title'))}
       </p>
-      <ul>{map(solutions, render)}</ul>
+      <ul>
+        {map(solutions, (solution) => (
+          <li key={solution.value.answer.value} {...dataTypes(solution)}>
+            <input type="checkbox" />
+            {render(get(solution, 'answer'))}
+          </li>
+        ))}
+      </ul>
     </section>
-  )
-}
-
-function renderSolution(state: StateValue<Solution>) {
-  return (
-    <li key={state.value.answer.value} {...dataTypes(state)}>
-      <input type="checkbox" />
-      {render(get(state, 'answer'))}
-    </li>
   )
 }
 
@@ -256,7 +252,6 @@ interface Text {
 }
 
 interface Solution {
-  type: 'solution'
   answer: Text
   correct: boolean
 }
@@ -267,4 +262,4 @@ interface MultipleChoiceExercise {
   solutions: Solution[]
 }
 
-type Entity = MultipleChoiceExercise | Solution | Text
+type Entity = MultipleChoiceExercise | Text
