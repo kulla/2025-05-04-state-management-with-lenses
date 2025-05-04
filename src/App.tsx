@@ -9,3 +9,14 @@ export default function App() {
     </main>
   )
 }
+
+interface MultipleChoiceExercise {
+  type: 'multiple-choice-exercise'
+  title: string
+  solutions: Solution[]
+}
+
+interface Solution {
+  answer: string
+  correct: boolean
+}
