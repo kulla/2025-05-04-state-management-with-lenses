@@ -1,6 +1,7 @@
 import '@picocss/pico/css/pico.min.css'
 import './App.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState, type FormEvent } from 'react'
+import { over, lensPath } from 'ramda'
 
 const exampleExercise: MultipleChoiceExercise = {
   type: 'multiple-choice-exercise',
@@ -20,6 +21,35 @@ function text(value: string): Text {
 export default function App() {
   const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
   const [selection, setSelection] = useState<Position | null>(null)
+
+  const handleBeforeInput = (event: FormEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+
+    if (!isInputEvent(event.nativeEvent)) return
+
+    const { data } = event.nativeEvent
+
+    if (typeof data !== 'string') return
+    if (data.length === 0) return
+
+    if (selection == null) return
+
+    const { path, offset } = selection
+
+    if (offset == null) return
+
+    setState((state) =>
+      over(
+        lensPath(path),
+        ({ value }: Text) => {
+          const newValue = value.slice(0, offset) + data + value.slice(offset)
+          return text(newValue)
+        },
+        state,
+      ),
+    )
+    setSelection({ ...selection, offset: offset + data.length })
+  }
 
   useEffect(() => {
     function handleSeletionChange() {
@@ -52,11 +82,51 @@ export default function App() {
     }
   })
 
+  useLayoutEffect(() => {
+    const windowSelection = window.getSelection()
+    if (!windowSelection) return
+
+    windowSelection.removeAllRanges()
+
+    if (selection == null) return
+
+    const { path, offset } = selection
+
+    const anchorNode = document.querySelector(
+      `[data-path='${JSON.stringify(path)}']`,
+    )
+
+    if (anchorNode == null) return
+
+    if (offset == null) {
+      const range = document.createRange()
+      range.selectNode(anchorNode)
+      windowSelection.addRange(range)
+      return
+    }
+
+    const textNode = anchorNode.childNodes[0]
+
+    const range = document.createRange()
+    range.setStart(textNode, offset)
+    range.setEnd(textNode, offset)
+
+    windowSelection.addRange(range)
+  }, [selection])
+
   return (
     <main className="content">
       <h1>Editable Multiple Choice Exercise</h1>
       <hr />
-      <div contentEditable suppressContentEditableWarning spellCheck={false}>
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        spellCheck={false}
+        onBeforeInput={handleBeforeInput}
+        onKeyDown={(event) => {
+          if (event.key.length > 1) event.preventDefault()
+        }}
+      >
         {render({ value: state, path: [] })}
       </div>
       <hr />
@@ -65,6 +135,10 @@ export default function App() {
       <pre>state: {JSON.stringify(state, null, 2)}</pre>
     </main>
   )
+}
+
+function isInputEvent(event: Event): event is InputEvent {
+  return 'data' in event
 }
 
 function getDataTypes(node: Node | null): {
