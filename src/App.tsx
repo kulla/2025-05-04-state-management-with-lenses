@@ -19,8 +19,10 @@ function text(value: string): Text {
 }
 
 export default function App() {
-  const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
-  const [selection, setSelection] = useState<Position | null>(null)
+  const [state, setState] = useState<EditorState>({
+    content: exampleExercise,
+    selection: null,
+  })
 
   const handleBeforeInput = (event: FormEvent<HTMLDivElement>) => {
     event.stopPropagation()
@@ -32,23 +34,25 @@ export default function App() {
     if (typeof data !== 'string') return
     if (data.length === 0) return
 
+    const { selection } = state
+
     if (selection == null) return
 
     const { path, offset } = selection
 
     if (offset == null) return
 
-    setState((state) =>
-      over(
+    setState(({ content }) => ({
+      content: over(
         lensPath(path),
         ({ value }: Text) => {
           const newValue = value.slice(0, offset) + data + value.slice(offset)
           return text(newValue)
         },
-        state,
+        content,
       ),
-    )
-    setSelection({ ...selection, offset: offset + data.length })
+      selection: { ...selection, offset: offset + data.length },
+    }))
   }
 
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function App() {
       const selection = window.getSelection()
 
       if (selection == null || !selection.isCollapsed) {
-        setSelection(null)
+        setState(({ content }) => ({ content, selection: null }))
         return
       }
 
@@ -64,14 +68,17 @@ export default function App() {
       const { path, type } = getDataTypes(anchorNode)
 
       if (path == null) {
-        setSelection(null)
+        setState(({ content }) => ({ content, selection: null }))
         return
       }
 
       if (type === 'text') {
-        setSelection({ path, offset: anchorOffset })
+        setState(({ content }) => ({
+          content,
+          selection: { path, offset: anchorOffset },
+        }))
       } else {
-        setSelection({ path })
+        setState(({ content }) => ({ content, selection: { path } }))
       }
     }
 
@@ -88,9 +95,9 @@ export default function App() {
 
     windowSelection.removeAllRanges()
 
-    if (selection == null) return
+    if (state.selection == null) return
 
-    const { path, offset } = selection
+    const { path, offset } = state.selection
 
     const anchorNode = document.querySelector(
       `[data-path='${JSON.stringify(path)}']`,
@@ -112,7 +119,7 @@ export default function App() {
     range.setEnd(textNode, offset)
 
     windowSelection.addRange(range)
-  }, [selection])
+  }, [state.selection])
 
   return (
     <main className="content">
@@ -127,12 +134,11 @@ export default function App() {
           if (event.key.length > 1) event.preventDefault()
         }}
       >
-        {render({ value: state, path: [], setState })}
+        {render({ value: state.content, path: [], setState })}
       </div>
       <hr />
       <h2>State</h2>
-      <pre>selection: {JSON.stringify(selection, null, 2)}</pre>
-      <pre>state: {JSON.stringify(state, null, 2)}</pre>
+      <pre>{JSON.stringify(state, null, 2)}</pre>
     </main>
   )
 }
@@ -237,7 +243,7 @@ function get<T, K extends keyof T & (string | number)>(
 interface StateValue<A> {
   value: A
   path: Path
-  setState: React.Dispatch<React.SetStateAction<MultipleChoiceExercise>>
+  setState: React.Dispatch<React.SetStateAction<EditorState>>
 }
 
 interface Position {
@@ -247,15 +253,12 @@ interface Position {
 
 type Path = Array<string | number>
 
-interface Text {
-  type: 'text'
-  value: string
+interface EditorState {
+  content: MultipleChoiceExercise
+  selection: Position | null
 }
 
-interface Solution {
-  answer: Text
-  correct: boolean
-}
+type Entity = MultipleChoiceExercise | Text
 
 interface MultipleChoiceExercise {
   type: 'multiple-choice-exercise'
@@ -263,4 +266,12 @@ interface MultipleChoiceExercise {
   solutions: Solution[]
 }
 
-type Entity = MultipleChoiceExercise | Text
+interface Solution {
+  answer: Text
+  correct: boolean
+}
+
+interface Text {
+  type: 'text'
+  value: string
+}
