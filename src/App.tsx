@@ -20,46 +20,87 @@ function text(value: string): Text {
 export default function App() {
   const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
 
-  return <main className="content">{render(state)}</main>
+  return <main className="content">{render({ value: state, path: [] })}</main>
 }
 
-function render(entity: Entity) {
-  switch (entity.type) {
+function render({ value, path }: StateValue<Entity>) {
+  switch (value.type) {
     case 'multiple-choice-exercise':
-      return renderMultipleChoiceExercise(entity)
+      return renderMultipleChoiceExercise({ value, path })
     case 'solution':
-      return renderSolution(entity)
+      return renderSolution({ value, path })
     case 'text':
-      return renderText(entity)
+      return renderText({ value, path })
     default:
       return null
   }
 }
 
-function renderMultipleChoiceExercise(exercise: MultipleChoiceExercise) {
+function renderMultipleChoiceExercise(
+  stateValue: StateValue<MultipleChoiceExercise>,
+) {
+  const solutions = get(stateValue, 'solutions')
+
   return (
     <section>
-      <h2>{render(exercise.title)}</h2>
+      <h2>{render(get(stateValue, 'title'))}</h2>
       <ul>
-        {exercise.solutions.map((solution) => (
-          <li key={solution.answer.value}>{render(solution)}</li>
+        {map(solutions, (solution) => (
+          <li key={solution.value.answer.value}>{render(solution)}</li>
         ))}
       </ul>
     </section>
   )
 }
 
-function renderSolution(solution: Solution) {
+function renderSolution(state: StateValue<Solution>) {
   return (
-    <label>
+    <label {...dataTypes(state)}>
       <input type="checkbox" />
-      {render(solution.answer)}
+      {render(get(state, 'answer'))}
     </label>
   )
 }
 
-function renderText(text: Text) {
-  return <span>{text.value}</span>
+function renderText(state: StateValue<Text>) {
+  return <span {...dataTypes(state)}>{state.value.value}</span>
+}
+
+function dataTypes({ value, path }: StateValue<unknown>) {
+  return {
+    'data-path': JSON.stringify(path),
+    ...(isEntity(value) ? { 'data-type': value.type } : {}),
+  }
+}
+
+function isEntity(value: unknown): value is Entity {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    typeof value.type === 'string'
+  )
+}
+
+function map<E, R>(
+  { value, path }: StateValue<Array<E>>,
+  callback: (value: StateValue<E>) => R,
+): Array<R> {
+  return value.map((item, index) =>
+    callback({ value: item, path: [...path, index] }),
+  )
+}
+
+function get<T, K extends keyof T & (string | number)>(
+  { value, path }: StateValue<T>,
+  key: K,
+): StateValue<T[K]> {
+  return { value: value[key], path: [...path, key] }
+}
+
+interface StateValue<A> {
+  value: A
+  path: Array<string | number>
 }
 
 interface Text {
