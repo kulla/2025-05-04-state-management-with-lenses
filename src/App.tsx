@@ -193,13 +193,38 @@ function renderMultipleChoiceExercise(
         <b>Exercise:</b> {render(get(stateValue, 'title'))}
       </p>
       <ul>
-        {map(solutions, (solution) => (
+        {map(solutions, (solution, index) => (
           <li key={solution.value.answer.value} {...dataTypes(solution)}>
             <input type="checkbox" />
             {render(get(solution, 'answer'))}
+            <button
+              type="button"
+              style={{ marginLeft: '1rem' }}
+              onClick={() => {
+                update(solutions, (state) => [
+                  ...state.slice(0, index),
+                  ...state.slice(index + 1),
+                ])
+              }}
+            >
+              Remove Solution
+            </button>
           </li>
         ))}
       </ul>
+
+      <button
+        type="button"
+        style={{ marginLeft: '1rem' }}
+        onClick={() => {
+          update(solutions, (state) => [
+            ...state,
+            { answer: text('New Solution'), correct: false },
+          ])
+        }}
+      >
+        Add Solution
+      </button>
     </section>
   )
 }
@@ -226,10 +251,10 @@ function isEntity(value: unknown): value is Entity {
 
 function map<E, R>(
   { value, path, setState }: StateValue<Array<E>>,
-  callback: (value: StateValue<E>) => R,
+  callback: (value: StateValue<E>, index: number) => R,
 ): Array<R> {
   return value.map((item, index) =>
-    callback({ value: item, path: [...path, index], setState }),
+    callback({ value: item, path: [...path, index], setState }, index),
   )
 }
 
@@ -238,6 +263,13 @@ function get<T, K extends keyof T & (string | number)>(
   key: K,
 ): StateValue<T[K]> {
   return { value: value[key], path: [...path, key], setState }
+}
+
+function update<A>({ path, setState }: StateValue<A>, updater: (a: A) => A) {
+  setState((state) => ({
+    selection: null,
+    content: over(lensPath(path), updater, state.content),
+  }))
 }
 
 interface StateValue<A> {
