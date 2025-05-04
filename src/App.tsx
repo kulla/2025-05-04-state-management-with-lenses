@@ -1,6 +1,6 @@
 import '@picocss/pico/css/pico.min.css'
 import './App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const exampleExercise: MultipleChoiceExercise = {
   type: 'multiple-choice-exercise',
@@ -19,8 +19,73 @@ function text(value: string): Text {
 
 export default function App() {
   const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
+  const [selection, setSelection] = useState<Position | null>(null)
 
-  return <main className="content">{render({ value: state, path: [] })}</main>
+  useEffect(() => {
+    function handleSeletionChange() {
+      const selection = window.getSelection()
+
+      if (selection == null || !selection.isCollapsed) {
+        setSelection(null)
+        return
+      }
+
+      const { anchorNode, anchorOffset } = selection
+      const { path, type } = getDataTypes(anchorNode)
+
+      if (path == null) {
+        setSelection(null)
+        return
+      }
+
+      if (type === 'text') {
+        setSelection({ path, offset: anchorOffset })
+      } else {
+        setSelection({ path })
+      }
+    }
+
+    document.addEventListener('selectionchange', handleSeletionChange)
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSeletionChange)
+    }
+  })
+
+  return (
+    <main className="content">
+      <div contentEditable suppressContentEditableWarning spellCheck={false}>
+        {render({ value: state, path: [] })}
+      </div>
+      <hr />
+      <h2>State</h2>
+      <pre>selection: {JSON.stringify(selection, null, 2)}</pre>
+    </main>
+  )
+}
+
+function getDataTypes(node: Node | null): {
+  path: Path | null
+  type: string | null
+} {
+  if (node == null) return { path: null, type: null }
+  if (!isElement(node)) return getDataTypes(node.parentNode)
+
+  const dataPath = node.getAttribute('data-path')
+  const dataType = node.getAttribute('data-type')
+
+  if (dataPath == null) return getDataTypes(node.parentNode)
+
+  const path = JSON.parse(dataPath)
+
+  return {
+    path,
+    ...(dataType ? { type: dataType } : { type: null }),
+  }
+}
+
+function isElement(node: Node): node is Element {
+  return node.nodeType === Node.ELEMENT_NODE
 }
 
 function render({ value, path }: StateValue<Entity>) {
@@ -100,8 +165,15 @@ function get<T, K extends keyof T & (string | number)>(
 
 interface StateValue<A> {
   value: A
-  path: Array<string | number>
+  path: Path
 }
+
+interface Position {
+  path: Path
+  offset?: number
+}
+
+type Path = Array<string | number>
 
 interface Text {
   type: 'text'
