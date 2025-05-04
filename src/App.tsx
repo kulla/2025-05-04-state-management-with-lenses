@@ -62,6 +62,7 @@ export default function App() {
       <hr />
       <h2>State</h2>
       <pre>selection: {JSON.stringify(selection, null, 2)}</pre>
+      <pre>state: {JSON.stringify(state, null, 2)}</pre>
     </main>
   )
 }
