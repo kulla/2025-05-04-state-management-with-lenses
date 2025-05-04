@@ -195,7 +195,16 @@ function renderMultipleChoiceExercise(
       <ul>
         {map(solutions, (solution, index) => (
           <li key={solution.value.answer.value} {...dataTypes(solution)}>
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              onChange={(event) =>
+                update(solution, (state) => ({
+                  ...state,
+                  correct: event.target.checked,
+                }))
+              }
+              checked={solution.value.correct}
+            />
             {render(get(solution, 'answer'))}
             <button
               type="button"
