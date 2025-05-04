@@ -14,10 +14,12 @@ const exampleExercise: MultipleChoiceExercise = {
 }
 
 export default function App() {
-  return <main className="content">{renderExercise(exampleExercise)}</main>
+  const [state, setState] = useState<MultipleChoiceExercise>(exampleExercise)
+
+  return <main className="content">{render(state)}</main>
 }
 
-function renderExercise(exercise: MultipleChoiceExercise) {
+function render(exercise: MultipleChoiceExercise) {
   return (
     <section>
       <h2>{exercise.title}</h2>
