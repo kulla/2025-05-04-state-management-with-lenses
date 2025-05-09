@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react'
-import { over, lensPath } from 'ramda'
+import { over, lensPath, equals } from 'ramda'
 
 const exampleExercise: MultipleChoiceExercise = {
   type: 'multiple-choice-exercise',
@@ -81,13 +81,14 @@ export default function App() {
         return
       }
 
-      if (type === 'text') {
+      const newSelection =
+        type === 'text' ? { path, offset: anchorOffset } : { path }
+
+      if (!equals(newSelection, state.selection)) {
         setState(({ content }) => ({
           content,
-          selection: { path, offset: anchorOffset },
+          selection: newSelection,
         }))
-      } else {
-        setState(({ content }) => ({ content, selection: { path } }))
       }
     }
 
@@ -96,7 +97,7 @@ export default function App() {
     return () => {
       document.removeEventListener('selectionchange', handleSeletionChange)
     }
-  })
+  }, [state])
 
   useLayoutEffect(() => {
     const windowSelection = window.getSelection()
