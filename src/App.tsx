@@ -1,6 +1,12 @@
 import '@picocss/pico/css/pico.min.css'
 import './App.css'
-import { useEffect, useLayoutEffect, useState, type FormEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type FormEvent,
+} from 'react'
 import { over, lensPath } from 'ramda'
 
 const exampleExercise: MultipleChoiceExercise = {
@@ -24,36 +30,39 @@ export default function App() {
     selection: null,
   })
 
-  const handleBeforeInput = (event: FormEvent<HTMLDivElement>) => {
-    event.stopPropagation()
+  const handleBeforeInput = useCallback(
+    (event: FormEvent<HTMLDivElement>) => {
+      event.stopPropagation()
 
-    if (!isInputEvent(event.nativeEvent)) return
+      if (!isInputEvent(event.nativeEvent)) return
 
-    const { data } = event.nativeEvent
+      const { data } = event.nativeEvent
 
-    if (typeof data !== 'string') return
-    if (data.length === 0) return
+      if (typeof data !== 'string') return
+      if (data.length === 0) return
 
-    const { selection } = state
+      const { selection } = state
 
-    if (selection == null) return
+      if (selection == null) return
 
-    const { path, offset } = selection
+      const { path, offset } = selection
 
-    if (offset == null) return
+      if (offset == null) return
 
-    setState(({ content }) => ({
-      content: over(
-        lensPath(path),
-        ({ value }: Text) => {
-          const newValue = value.slice(0, offset) + data + value.slice(offset)
-          return text(newValue)
-        },
-        content,
-      ),
-      selection: { ...selection, offset: offset + data.length },
-    }))
-  }
+      setState(({ content }) => ({
+        content: over(
+          lensPath(path),
+          ({ value }: Text) => {
+            const newValue = value.slice(0, offset) + data + value.slice(offset)
+            return text(newValue)
+          },
+          content,
+        ),
+        selection: { ...selection, offset: offset + data.length },
+      }))
+    },
+    [state],
+  )
 
   useEffect(() => {
     function handleSeletionChange() {
